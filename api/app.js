@@ -10,7 +10,8 @@ const expressJWT = require('express-jwt');
 const jwt = require('jsonwebtoken');
 const bearerToken = require('express-bearer-token');
 const cors = require('cors');
-const constants = require('./config/constants.json')
+const constants = require('./config/constants.json');
+const validator = require('validator');
 const { 
     v1: uuidv1,
     v4: uuidv4,
@@ -61,7 +62,6 @@ app.use(expressJWT({
 app.use(bearerToken());
 
 logger.level = 'debug';
-
 
 app.use((req, res, next) => {
     logger.debug('New req for %s', req.originalUrl);
@@ -447,7 +447,7 @@ app.post('/users', async function (req, res) {
 
 app.post('/channels/:channelName/chaincodes/:chaincodeName/batch/create', async function (req, res) {
 
-    if (req.username == adminUsername) {
+    if (req.username === adminUsername) {
         res.json({ success: false, message: "Permission denied."});
         return;
     }
@@ -458,13 +458,13 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/batch/create', async 
         
         let id = uuidv4();
         let owner = req.username;
-        var chaincodeName = req.params.chaincodeName;
-        var channelName = req.params.channelName;
-        var price = req.body.price;
+        const chaincodeName = req.params.chaincodeName;
+        const channelName = req.params.channelName;
+        const price = req.body.price;
         //new
-        var assetType = "Batch";
-        var tag = req.body.tag;
-        var status = req.body.status;
+        const assetType = "Batch";
+        const tag = req.body.tag;
+        const status = req.body.status;
 
         let role = req.role;
         let userType = req.userType;
@@ -507,8 +507,15 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/batch/create', async 
             if (err) {
                 console.log(err);
             }
-            var dbo = db.db("mydb");
-            var myobj = { user: owner, assetId: id, assetType: "Chicken", tx: "Create", date: Date(), details: message.result };
+            const dbo = db.db("mydb");
+            const myobj = {
+                user: owner,
+                assetId: id,
+                assetType: "Chicken",
+                tx: "Create",
+                date: Date(),
+                details: message.result
+            };
             dbo.collection("Logs").insertOne(myobj, function(err, result) {
                 if (err) {
                     console.log(err);
@@ -532,26 +539,25 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/batch/create', async 
 
 app.post('/channels/:channelName/chaincodes/:chaincodeName/asset/create/bulk', async function (req, res) {
 
-    if (req.username == adminUsername || req.userType != "Factory") {
+    if (req.username === adminUsername || req.userType !== "Factory") {
         res.json({ success: false, message: "Permission denied."});
         return;
     }
 
-
     try {
 
         logger.debug('==================== INVOKE ON CHAINCODE ==================');
-        var chaincodeName = req.params.chaincodeName;
-        var channelName = req.params.channelName;
-        var price = req.body.price;
-        var count = req.body.count;
+        const chaincodeName = req.params.chaincodeName;
+        const channelName = req.params.channelName;
+        const price = req.body.price;
+        const count = req.body.count;
 
         let owner = req.username;
 
         //new
-        var assetType = req.body.assetType;
-        var tag = req.body.tag;
-        var status = req.body.status;
+        const assetType = req.body.assetType;
+        const tag = req.body.tag;
+        const status = req.body.status;
 
 
         logger.debug('channelName  : ' + channelName);
@@ -574,8 +580,8 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/asset/create/bulk', a
         }
 
 
-        var firstIterate = true;
-        var assetsIdsStr = "";
+        let firstIterate = true;
+        let assetsIdsStr = "";
         for (let i = 0; i < count; i++)  {
             if(!firstIterate) {
                 assetsIdsStr = assetsIdsStr + "#";
@@ -600,8 +606,15 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/asset/create/bulk', a
             if (err) {
                 console.log(err);
             }
-            var dbo = db.db("mydb");
-            var myobj = { user: owner, assetId: "", assetType: "Chicken", tx: "Create Bulk", date: Date(), details: message.result };
+            const dbo = db.db("mydb");
+            const myobj = {
+                user: owner,
+                assetId: "",
+                assetType: "Chicken",
+                tx: "Create Bulk",
+                date: Date(),
+                details: message.result
+            };
             dbo.collection("Logs").insertOne(myobj, function(err, result) {
                 if (err) {
                     console.log(err);
@@ -625,24 +638,24 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/asset/create/bulk', a
 
 app.post('/channels/:channelName/chaincodes/:chaincodeName/batch/create/asset/bulk', async function (req, res) {
 
-    if (req.username == adminUsername || req.userType != "Factory") {
+    if (req.username === adminUsername || req.userType !== "Factory") {
         res.json({ success: false, message: "Permission denied."});
         return;
     }
 
     try {
         logger.debug('==================== INVOKE ON CHAINCODE ==================');
-        var chaincodeName = req.params.chaincodeName;
-        var channelName = req.params.channelName;
-        var price = req.body.price;
+        const chaincodeName = req.params.chaincodeName;
+        const channelName = req.params.channelName;
+        const price = req.body.price;
         let owner = req.username;
         //-------------------------------------
         //new
-        var assetType = req.body.assetType;
-        var tag = req.body.tag;
-        var status = req.body.status;
+        const assetType = req.body.assetType;
+        const tag = req.body.tag;
+        const status = req.body.status;
 
-        var batchId = uuidv4();
+        const batchId = uuidv4();
 
         logger.debug('channelName  : ' + channelName);
         logger.debug('chaincodeName : ' + chaincodeName);
@@ -678,7 +691,7 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/batch/create/asset/bu
                     return;
                 }
                 console.log("Connected to database.");
-                var sql = "SELECT * FROM organizations WHERE `username` = '"+owner+"'";
+                const sql = "SELECT * FROM organizations WHERE `username` = '" + owner + "'";
                 databaseCon.query(sql, async function (err, result) {
 
                     if (err) {
@@ -692,7 +705,7 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/batch/create/asset/bu
                         return;
                     }
 
-                    var count = result[0].batchSize;
+                    const count = result[0].batchSize;
 
                     if (count <= 0) {
                         console.log("You dont have permission to create batch.");
@@ -704,9 +717,9 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/batch/create/asset/bu
                         res.send(response_payload)
                         return;
                     }
-                    
-                    var firstIterate = true;
-                    var assetsIdsStr = "";
+
+                    let firstIterate = true;
+                    let assetsIdsStr = "";
                     for (let i = 0; i < count; i++)  {
                         if(!firstIterate) {
                             assetsIdsStr = assetsIdsStr + "#";
@@ -731,8 +744,15 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/batch/create/asset/bu
                         if (err) {
                             console.log(err);
                         }
-                        var dbo = db.db("mydb");
-                        var myobj = { user: owner, assetId: batchId, assetType: "Batch", tx: "Create bulk chicken in batch.", date: Date(), details: message.result };
+                        const dbo = db.db("mydb");
+                        const myobj = {
+                            user: owner,
+                            assetId: batchId,
+                            assetType: "Batch",
+                            tx: "Create bulk chicken in batch.",
+                            date: Date(),
+                            details: message.result
+                        };
                         dbo.collection("Logs").insertOne(myobj, function(err, result) {
                             if (err) {
                                 console.log(err);
@@ -763,16 +783,16 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/batch/create/asset/bu
 
 app.post('/channels/:channelName/chaincodes/:chaincodeName/token/buy', async function (req, res) {
 
-    if (req.username == adminUsername) {
+    if (req.username === adminUsername) {
         res.json({ success: false, message: "Permission denied."});
         return;
     }
 
     try {
         logger.debug('==================== INVOKE ON CHAINCODE ==================');
-        var chaincodeName = req.params.chaincodeName;
-        var channelName = req.params.channelName;
-        var price = req.body.price;
+        const chaincodeName = req.params.chaincodeName;
+        const channelName = req.params.channelName;
+        const price = req.body.price;
 
         let user = req.username;
 
@@ -815,17 +835,17 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/token/buy', async fun
 
 app.post('/channels/:channelName/chaincodes/:chaincodeName/token/transfer', async function (req, res) {
     
-    if (req.username == adminUsername) {
+    if (req.username === adminUsername) {
         res.json({ success: false, message: "Permission denied."});
         return;
     }
     
     try {
         logger.debug('==================== INVOKE ON CHAINCODE ==================');
-        var chaincodeName = req.params.chaincodeName;
-        var channelName = req.params.channelName;
-        var amount = req.body.amount;
-        var receiver = req.body.receiver;
+        const chaincodeName = req.params.chaincodeName;
+        const channelName = req.params.channelName;
+        const amount = req.body.amount;
+        const receiver = req.body.receiver;
 
         let user = req.username;
 
@@ -873,19 +893,19 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/token/transfer', asyn
 
 app.post('/channels/:channelName/chaincodes/:chaincodeName/attr/put', async function (req, res) {
 
-    if (req.username == adminUsername) {
+    if ( req.username === adminUsername ) {
         res.json({ success: false, message: "Permission denied."});
         return;
     }
 
     try {
         logger.debug('==================== INVOKE ON CHAINCODE ==================');
-        var chaincodeName = req.params.chaincodeName;
-        var channelName = req.params.channelName;
-        var id = req.body.id;
-        var key = req.body.key;
-        var value = req.body.value;
-        var instruction = req.body.instruction;
+        const chaincodeName = req.params.chaincodeName;
+        const channelName = req.params.channelName;
+        const id = req.body.id;
+        const key = req.body.key;
+        const value = req.body.value;
+        const instruction = req.body.instruction;
 
         logger.debug('channelName  : ' + channelName);
         logger.debug('chaincodeName : ' + chaincodeName);
@@ -916,6 +936,21 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/attr/put', async func
         if (!instruction) {
             res.json(getErrorMessage('\'instruction\''));
             return;
+        }
+
+        // uuid validation.
+        const validate = validator.default.isUUID(id, 4)
+        if (!validate) {
+            logger.debug("id is invalid");
+            res.send(
+                {
+                    "success": false,
+                    "error": {
+                        "status": 400,
+                        "message": "Invalid uuid."
+                    }
+                }
+            )
         }
 
         let message = await invoke.putAttr(channelName, chaincodeName, req.username, req.orgname, id, key, value, instruction);
@@ -940,19 +975,19 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/attr/put', async func
 
 app.post('/channels/:channelName/chaincodes/:chaincodeName/batch/attr/put', async function (req, res) {
 
-    if (req.username == adminUsername) {
+    if (req.username === adminUsername) {
         res.json({ success: false, message: "Permission denied."});
         return;
     }
 
     try {
         logger.debug('==================== INVOKE ON CHAINCODE ==================');
-        var chaincodeName = req.params.chaincodeName;
-        var channelName = req.params.channelName;
-        var id = req.body.batchId;
-        var key = req.body.key;
-        var value = req.body.value;
-        var instruction = req.body.instruction;
+        const chaincodeName = req.params.chaincodeName;
+        const channelName = req.params.channelName;
+        const id = req.body.batchId;
+        const key = req.body.key;
+        const value = req.body.value;
+        const instruction = req.body.instruction;
 
         logger.debug('channelName  : ' + channelName);
         logger.debug('chaincodeName : ' + chaincodeName);
@@ -985,6 +1020,20 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/batch/attr/put', asyn
             return;
         }
 
+        // uuid validation.
+        if (!validator.default.isUUID(id, 4)) {
+            logger.debug("id is invalid");
+            res.send(
+                {
+                    "success": false,
+                    "error": {
+                        "status": 400,
+                        "message": "Invalid uuid."
+                    }
+                }
+            )
+        }
+
         let message = await invoke.putAttrForAssetsInBatch(channelName, chaincodeName, req.username, req.orgname, id, key, value, instruction);
         console.log(`message result is : ${message}`)
 
@@ -1007,17 +1056,17 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/batch/attr/put', asyn
 
 app.post('/channels/:channelName/chaincodes/:chaincodeName/asset/owner/change', async function (req, res) {
 
-    if (req.username == adminUsername) {
+    if (req.username === adminUsername) {
         res.json({ success: false, message: "Permission denied."});
         return;
     }
 
     try {
         logger.debug('==================== INVOKE ON CHAINCODE ==================');
-        var chaincodeName = req.params.chaincodeName;
-        var channelName = req.params.channelName;
-        var id = req.body.id;
-        var newOwner = req.body.newOwner;
+        const chaincodeName = req.params.chaincodeName;
+        const channelName = req.params.channelName;
+        const id = req.body.id;
+        const newOwner = req.body.newOwner;
 
         let owner = req.username;
 
@@ -1042,6 +1091,21 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/asset/owner/change', 
             return;
         }
 
+        // uuid validation.
+        const validate = validator.default.isUUID(id, 4)
+        if (!validate) {
+            logger.debug("id is invalid");
+            res.send(
+                {
+                    "success": false,
+                    "error": {
+                        "status": 400,
+                        "message": "Invalid uuid."
+                    }
+                }
+            )
+        }
+
         let message = await invoke.changeAssetOwner(channelName, chaincodeName, req.username, req.orgname, id, owner, newOwner);
         console.log(`message result is : ${message}`)
 
@@ -1064,16 +1128,16 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/asset/owner/change', 
 
 app.post('/channels/:channelName/chaincodes/:chaincodeName/asset/delivery/take', async function (req, res) {
 
-    if (req.username == adminUsername) {
+    if (req.username === adminUsername) {
         res.json({ success: false, message: "Permission denied."});
         return;
     }
 
     try {
         logger.debug('==================== INVOKE ON CHAINCODE ==================');
-        var chaincodeName = req.params.chaincodeName;
-        var channelName = req.params.channelName;
-        var id = req.body.id;
+        const chaincodeName = req.params.chaincodeName;
+        const channelName = req.params.channelName;
+        const id = req.body.id;
 
         let buyer = req.username;
 
@@ -1098,6 +1162,20 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/asset/delivery/take',
             return;
         }
 
+        // uuid validation.
+        if (!validator.default.isUUID(id, 4)) {
+            logger.debug("id is invalid");
+            res.send(
+                {
+                    "success": false,
+                    "error": {
+                        "status": 400,
+                        "message": "Invalid uuid."
+                    }
+                }
+            )
+        }
+
         let message = await invoke.takeDelivery(channelName, chaincodeName, req.username, req.orgname, id, buyer);
         console.log(`message result is : ${message}`)
 
@@ -1120,16 +1198,16 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/asset/delivery/take',
 
 app.post('/channels/:channelName/chaincodes/:chaincodeName/asset/localDC/add', async function (req, res) {
 
-    if (req.username == adminUsername) {
+    if (req.username === adminUsername) {
         res.json({ success: false, message: "Permission denied."});
         return;
     }
 
     try {
         logger.debug('==================== INVOKE ON CHAINCODE ==================');
-        var chaincodeName = req.params.chaincodeName;
-        var channelName = req.params.channelName;
-        var id = req.body.id;
+        const chaincodeName = req.params.chaincodeName;
+        const channelName = req.params.channelName;
+        const id = req.body.id;
 
         let localDC = req.username;
 
@@ -1148,18 +1226,38 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/asset/localDC/add', a
             res.json(getErrorMessage('\'id\''));
             return;
         }
-        
+
+        // uuid validation.
+        if (!validator.default.isUUID(id, 4)) {
+            logger.debug("id is invalid");
+            res.send(
+                {
+                    "success": false,
+                    "error": {
+                        "status": 400,
+                        "message": "Invalid uuid."
+                    }
+                }
+            )
+        }
+
         let message = await invoke.addLocalDC(channelName, chaincodeName, req.username, req.orgname, id, localDC);
         console.log(`message result is : ${message}`)
 
-        if(message.status == 200) {
-
+        if(message.status === 200) {
             
             MongoClient.connect(url, function(err, db) {
                 if (err) throw err;
-                var dbo = db.db("mydb");
+                const dbo = db.db("mydb");
                 const date = Date()
-                var myobj = { user: localDC, assetId: id, assetType: "Asset", tx: "AddLocalDeliveryCompany", date: date, details: message.body};
+                const myobj = {
+                    user: localDC,
+                    assetId: id,
+                    assetType: "Asset",
+                    tx: "AddLocalDeliveryCompany",
+                    date: date,
+                    details: message.body
+                };
                 dbo.collection("Logs").insertOne(myobj, function(err, result) {
                     if (err) {
                         console.log(err);
@@ -1194,16 +1292,16 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/asset/localDC/add', a
 
 app.post('/channels/:channelName/chaincodes/:chaincodeName/asset/globalDC/add', async function (req, res) {
 
-    if (req.username == adminUsername) {
+    if (req.username === adminUsername) {
         res.json({ success: false, message: "Permission denied."});
         return;
     }
 
     try {
         logger.debug('==================== INVOKE ON CHAINCODE ==================');
-        var chaincodeName = req.params.chaincodeName;
-        var channelName = req.params.channelName;
-        var id = req.body.id;
+        const chaincodeName = req.params.chaincodeName;
+        const channelName = req.params.channelName;
+        const id = req.body.id;
 
         let globalDC = req.username;
 
@@ -1222,18 +1320,38 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/asset/globalDC/add', 
             res.json(getErrorMessage('\'id\''));
             return;
         }
+
+        // uuid validation.
+        if (!validator.default.isUUID(id, 4)) {
+            logger.debug("id is invalid");
+            res.send(
+                {
+                    "success": false,
+                    "error": {
+                        "status": 400,
+                        "message": "Invalid uuid."
+                    }
+                }
+            )
+        }
         
         let message = await invoke.addGlobalDC(channelName, chaincodeName, req.username, req.orgname, id, globalDC);
         console.log(`message result is : ${message}`)
 
-        if(message.status == 200) {
-
+        if(message.status === 200) {
 
             MongoClient.connect(url, function(err, db) {
                 if (err) throw err;
-                var dbo = db.db("mydb");
+                const dbo = db.db("mydb");
                 const date = Date()
-                var myobj = { user: globalDC, assetId: id, assetType: "Asset", tx: "AddGlobalDeliveryCompany", date: date, details: message.body};
+                const myobj = {
+                    user: globalDC,
+                    assetId: id,
+                    assetType: "Asset",
+                    tx: "AddGlobalDeliveryCompany",
+                    date: date,
+                    details: message.body
+                };
                 dbo.collection("Logs").insertOne(myobj, function(err, result) {
                     if (err) {
                         console.log(err);
@@ -1265,71 +1383,19 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/asset/globalDC/add', 
     }
 });
 
-// app.post('/channels/:channelName/chaincodes/:chaincodeName/asset/owner/change/phone', async function (req, res) {
-
-//     try {
-//         logger.debug('==================== INVOKE ON CHAINCODE ==================');
-//         var chaincodeName = req.params.chaincodeName;
-//         var channelName = req.params.channelName;
-//         var id = req.body.id;
-//         var newOwner = req.body.newOwner;
-
-//         let owner = req.username;
-
-//         logger.debug('channelName  : ' + channelName);
-//         logger.debug('chaincodeName : ' + chaincodeName);
-//         logger.debug('id  : ' + id);
-//         logger.debug('newOwner  : ' + newOwner);
-//         if (!chaincodeName) {
-//             res.json(getErrorMessage('\'chaincodeName\''));
-//             return;
-//         }
-//         if (!channelName) {
-//             res.json(getErrorMessage('\'channelName\''));
-//             return;
-//         }
-//         if (!id) {
-//             res.json(getErrorMessage('\'id\''));
-//             return;
-//         }
-//         if (!newOwner) {
-//             res.json(getErrorMessage('\'newOwner\''));
-//             return;
-//         }
-
-//         let message = await invoke.changeAssetOwnerPhone(channelName, chaincodeName, req.username, req.orgname, id, owner, newOwner);
-//         console.log(`message result is : ${message}`)
-
-//         const response_payload = {
-//             result: message,
-//             error: null,
-//             errorData: null
-//         }
-//         res.send(response_payload);
-
-//     } catch (error) {
-//         const response_payload = {
-//             result: null,
-//             error: error.name,
-//             errorData: error.message
-//         }
-//         res.send(response_payload)
-//     }
-// });
-
 app.post('/channels/:channelName/chaincodes/:chaincodeName/asset/status/change', async function (req, res) {
 
-    if (req.username == adminUsername) {
+    if (req.username === adminUsername) {
         res.json({ success: false, message: "Permission denied."});
         return;
     }
 
     try {
         logger.debug('==================== INVOKE ON CHAINCODE ==================');
-        var chaincodeName = req.params.chaincodeName;
-        var channelName = req.params.channelName;
-        var id = req.body.id;
-        var status = req.body.status;
+        const chaincodeName = req.params.chaincodeName;
+        const channelName = req.params.channelName;
+        const id = req.body.id;
+        const status = req.body.status;
 
         let owner = req.username;
 
@@ -1352,6 +1418,20 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/asset/status/change',
         if (!status) {
             res.json(getErrorMessage('\'status\''));
             return;
+        }
+
+        // uuid validation.
+        if (!validator.default.isUUID(id, 4)) {
+            logger.debug("id is invalid");
+            res.send(
+                {
+                    "success": false,
+                    "error": {
+                        "status": 400,
+                        "message": "Invalid uuid."
+                    }
+                }
+            )
         }
 
         let message = await invoke.changeAssetStatus(channelName, chaincodeName, req.username, req.orgname, id, owner, status);
@@ -1377,18 +1457,17 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/asset/status/change',
 
 app.post('/channels/:channelName/chaincodes/:chaincodeName/assetsInBatch/status/change', async function (req, res) {
 
-    if (req.username == adminUsername) {
+    if (req.username === adminUsername) {
         res.json({ success: false, message: "Permission denied."});
         return;
     }
 
     try {
         logger.debug('==================== INVOKE ON CHAINCODE ==================');
-        var chaincodeName = req.params.chaincodeName;
-        var channelName = req.params.channelName;
-        var id = req.body.batchId;
-        var status = req.body.status;
-
+        const chaincodeName = req.params.chaincodeName;
+        const channelName = req.params.channelName;
+        const id = req.body.batchId;
+        const status = req.body.status;
         let owner = req.username;
 
         logger.debug('channelName  : ' + channelName);
@@ -1410,6 +1489,20 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/assetsInBatch/status/
         if (!status) {
             res.json(getErrorMessage('\'status\''));
             return;
+        }
+
+        // uuid validation.
+        if (!validator.default.isUUID(id, 4)) {
+            logger.debug("id is invalid");
+            res.send(
+                {
+                    "success": false,
+                    "error": {
+                        "status": 400,
+                        "message": "Invalid uuid."
+                    }
+                }
+            )
         }
 
         let message = await invoke.changeStatusForAssetsInBatch(channelName, chaincodeName, req.username, req.orgname, id, owner, status);
@@ -1435,17 +1528,17 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/assetsInBatch/status/
 
 app.post('/channels/:channelName/chaincodes/:chaincodeName/asset/price', async function (req, res) {
 
-    if (req.username == adminUsername) {
+    if (req.username === adminUsername) {
         res.json({ success: false, message: "Permission denied."});
         return;
     }
 
     try {
         logger.debug('==================== INVOKE ON CHAINCODE ==================');
-        var chaincodeName = req.params.chaincodeName;
-        var channelName = req.params.channelName;
-        var id = req.body.id;
-        var price = req.body.price;
+        const chaincodeName = req.params.chaincodeName;
+        const channelName = req.params.channelName;
+        const id = req.body.id;
+        const price = req.body.price;
 
         logger.debug('channelName  : ' + channelName);
         logger.debug('chaincodeName : ' + chaincodeName);
@@ -1466,6 +1559,20 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/asset/price', async f
         if (price == null) {
             res.json(getErrorMessage('\'price\''));
             return;
+        }
+
+        // uuid validation.
+        if (!validator.default.isUUID(id, 4)) {
+            logger.debug("id is invalid");
+            res.send(
+                {
+                    "success": false,
+                    "error": {
+                        "status": 400,
+                        "message": "Invalid uuid."
+                    }
+                }
+            )
         }
 
         let message = await invoke.setAssetPrice(channelName, chaincodeName, req.username, req.orgname, id, price);
@@ -1490,18 +1597,18 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/asset/price', async f
 
 app.post('/channels/:channelName/chaincodes/:chaincodeName/collection/:collectionName/asset/public', async function (req, res) {
     
-    if (req.username == adminUsername) {
+    if (req.username === adminUsername) {
         res.json({ success: false, message: "Permission denied."});
         return;
     }
     
     try {
         logger.debug('==================== INVOKE ON CHAINCODE ==================');
-        var chaincodeName = req.params.chaincodeName;
-        var channelName = req.params.channelName;
-        var collectionName = req.params.collectionName
-        var assetId = req.body.assetId;
-        var price = 0.0;
+        const chaincodeName = req.params.chaincodeName;
+        const channelName = req.params.channelName;
+        const collectionName = req.params.collectionName;
+        const assetId = req.body.assetId;
+        let price = 0.0;
         price = req.body.price;
 
         let user = req.username;
@@ -1528,10 +1635,24 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/collection/:collectio
             return;
         }
 
+        // uuid validation.
+        if (!validator.default.isUUID(assetId, 4)) {
+            logger.debug("id is invalid");
+            res.send(
+                {
+                    "success": false,
+                    "error": {
+                        "status": 400,
+                        "message": "Invalid uuid."
+                    }
+                }
+            )
+        }
+
         let message = await invoke.setAssetPublicToSell(channelName, chaincodeName, req.username, req.orgname, assetId, user, price, req.userType);
         console.log(`message result is : ${message}`)
 
-        var asset = message.body;
+        const asset = message.body;
         if (asset.forSale) {
 
             MongoClient.connect(url, function(err, db) {
@@ -1539,8 +1660,8 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/collection/:collectio
                     console.log(err);
                     res.json({ success: false, message: err});
                 }
-                var dbo = db.db("mydb");
-                var myobj = { _id: assetId, asset: asset, price: price, bids: {} };
+                const dbo = db.db("mydb");
+                const myobj = {_id: assetId, asset: asset, price: price, bids: {}};
                 dbo.collection(collectionName).insertOne(myobj, function(err, result) {
                     if (err) {
                         console.log(err);
@@ -1574,18 +1695,18 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/collection/:collectio
 
 app.post('/channels/:channelName/chaincodes/:chaincodeName/asset/bid', async function (req, res) {
 
-    if (req.username == adminUsername) {
+    if (req.username === adminUsername) {
         res.json({ success: false, message: "Permission denied."});
         return;
     }
 
     try {
         logger.debug('==================== INVOKE ON CHAINCODE ==================');
-        var chaincodeName = req.params.chaincodeName;
-        var channelName = req.params.channelName;
-        var assetId = req.body.assetId;
-        var assetOwner = req.body.assetOwner;
-        var price = req.body.price;
+        const chaincodeName = req.params.chaincodeName;
+        const channelName = req.params.channelName;
+        const assetId = req.body.assetId;
+        const assetOwner = req.body.assetOwner;
+        const price = req.body.price;
 
         let customer = req.username;
 
@@ -1616,15 +1737,29 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/asset/bid', async fun
             return;
         }
 
-        if (customer == assetOwner) {
+        if (customer === assetOwner) {
             res.json({ success: false, message: "Permission denied."});
             return;
+        }
+
+        // uuid validation.
+        if (!validator.default.isUUID(assetId, 4)) {
+            logger.debug("id is invalid");
+            res.send(
+                {
+                    "success": false,
+                    "error": {
+                        "status": 400,
+                        "message": "Invalid uuid."
+                    }
+                }
+            )
         }
 
         let message = await invoke.blockingToken(channelName, chaincodeName, req.username, req.orgname, customer);
         console.log(`message result is : ${message}`)
 
-        if(message.staus == 200) {
+        if(message.staus === 200) {
             MongoClient.connect(url, function(err, db) {
                 if (err) throw err;
                 var dbo = db.db("mydb");
@@ -1672,19 +1807,18 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/asset/bid', async fun
 
 app.post('/channels/:channelName/chaincodes/:chaincodeName/batch/add', async function (req, res) {
 
-    if (req.username == adminUsername) {
+    if (req.username === adminUsername) {
         res.json({ success: false, message: "Permission denied."});
         return;
     }
 
     try {
         logger.debug('==================== INVOKE ON CHAINCODE ==================');
-        var chaincodeName = req.params.chaincodeName;
-        var channelName = req.params.channelName;
-
-        var batchId = req.body.batchId;
-        var assetsIds = req.body.assetsIds;
-        let owner = req.username;
+        const chaincodeName = req.params.chaincodeName;
+        const channelName = req.params.channelName;
+        const batchId = req.body.batchId;
+        const assetsIds = req.body.assetsIds;
+        const owner = req.username;
 
         logger.debug('channelName  : ' + channelName);
         logger.debug('chaincodeName : ' + chaincodeName);
@@ -1707,8 +1841,8 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/batch/add', async fun
             return;
         }
 
-        var firstIterate = true;
-        var assetsIdsStr = "";
+        let firstIterate = true;
+        let assetsIdsStr = "";
         for (var key in assetsIds) {
             if (assetsIds.hasOwnProperty(key)) {
                 if(!firstIterate) {
@@ -1719,7 +1853,21 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/batch/add', async fun
             }
         }
         assetsIdsStr = assetsIdsStr + "";
-        console.log("assetsIds array : " + assetsIdsStr);         
+        console.log("assetsIds array : " + assetsIdsStr);
+
+        // uuid validation.
+        if (!validator.default.isUUID(batchId, 4)) {
+            logger.debug("id is invalid");
+            res.send(
+                {
+                    "success": false,
+                    "error": {
+                        "status": 400,
+                        "message": "Invalid uuid."
+                    }
+                }
+            )
+        }
 
         let message = await invoke.putAssetsInBatch(channelName, chaincodeName, req.username, req.orgname, assetsIdsStr, owner, batchId);
         console.log(`message result is : ${message}`)
@@ -1743,18 +1891,17 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/batch/add', async fun
 
 app.post('/channels/:channelName/chaincodes/:chaincodeName/batch/remove', async function (req, res) {
 
-    if (req.username == adminUsername) {
+    if (req.username === adminUsername) {
         res.json({ success: false, message: "Permission denied."});
         return;
     }
 
     try {
         logger.debug('==================== INVOKE ON CHAINCODE ==================');
-        var chaincodeName = req.params.chaincodeName;
-        var channelName = req.params.channelName;
-
-        var batchId = req.body.batchId;
-        var assetsIds = req.body.assetsIds;
+        const chaincodeName = req.params.chaincodeName;
+        const channelName = req.params.channelName;
+        const batchId = req.body.batchId;
+        const assetsIds = req.body.assetsIds;
         let owner = req.username;
 
         logger.debug('channelName  : ' + channelName);
@@ -1778,9 +1925,9 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/batch/remove', async 
             return;
         }
 
-        var firstIterate = true;
-        var assetsIdsStr = "";
-        for (var key in assetsIds) {
+        let firstIterate = true;
+        let assetsIdsStr = "";
+        for (let key in assetsIds) {
             if (assetsIds.hasOwnProperty(key)) {
                 if(!firstIterate) {
                     assetsIdsStr = assetsIdsStr + "#";
@@ -1790,7 +1937,21 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/batch/remove', async 
             }
         }
         assetsIdsStr = assetsIdsStr + "";
-        console.log("assetsIds array : " + assetsIdsStr);         
+        console.log("assetsIds array : " + assetsIdsStr);
+
+        // uuid validation.
+        if (!validator.default.isUUID(batchId, 4)) {
+            logger.debug("id is invalid");
+            res.send(
+                {
+                    "success": false,
+                    "error": {
+                        "status": 400,
+                        "message": "Invalid uuid."
+                    }
+                }
+            )
+        }
 
         let message = await invoke.removeAssetsFromBatch(channelName, chaincodeName, req.username, req.orgname, assetsIdsStr, owner, batchId);
         console.log(`message result is : ${message}`)
@@ -1812,77 +1973,19 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/batch/remove', async 
     }
 });
 
-// app.post('/channels/:channelName/chaincodes/:chaincodeName/shop/send', async function (req, res) {
-
-//     if (req.username == adminUsername || req.userType != "Retailer") {
-//         res.json({ success: false, message: "Permission denied."});
-//         return;
-//     }
-
-//     try {
-//         logger.debug('==================== INVOKE ON CHAINCODE ==================');
-//         var chaincodeName = req.params.chaincodeName;
-//         var channelName = req.params.channelName;
-//         var id = req.body.id;
-//         var price = req.body.price;
-
-//         let owner = req.username;
-
-//         logger.debug('channelName  : ' + channelName);
-//         logger.debug('chaincodeName : ' + chaincodeName);
-//         logger.debug('id  : ' + id);
-//         logger.debug('price  : ' + price);
-//         if (!chaincodeName) {
-//             res.json(getErrorMessage('\'chaincodeName\''));
-//             return;
-//         }
-//         if (!channelName) {
-//             res.json(getErrorMessage('\'channelName\''));
-//             return;
-//         }
-//         if (!id) {
-//             res.json(getErrorMessage('\'id\''));
-//             return;
-//         }
-//         if (!price) {
-//             res.json(getErrorMessage('\'price\''));
-//             return;
-//         }
-
-//         let message = await invoke.sendToShop(channelName, chaincodeName, req.username, req.orgname, id, owner, price);
-//         console.log(`message result is : ${message}`)
-
-//         const response_payload = {
-//             result: message,
-//             error: null,
-//             errorData: null
-//         }
-//         res.send(response_payload);
-
-//     } catch (error) {
-//         const response_payload = {
-//             success: false,
-//             result: null,
-//             error: error.name,
-//             errorData: error.message
-//         }
-//         res.send(response_payload)
-//     }
-// });
-
 app.post('/channels/:channelName/chaincodes/:chaincodeName/asset/sell', async function (req, res) {
 
-    if (req.username == adminUsername) {
+    if (req.username === adminUsername) {
         res.json({ success: false, message: "Permission denied."});
         return;
     }
 
     try {
         logger.debug('==================== INVOKE ON CHAINCODE ==================');
-        var chaincodeName = req.params.chaincodeName;
-        var channelName = req.params.channelName;
-        var id = req.body.id;
-        var customer = req.body.customer;
+        const chaincodeName = req.params.chaincodeName;
+        const channelName = req.params.channelName;
+        const id = req.body.id;
+        const customer = req.body.customer;
 
         logger.debug('channelName  : ' + channelName);
         logger.debug('chaincodeName : ' + chaincodeName);
@@ -1905,10 +2008,24 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/asset/sell', async fu
             return;
         }
 
+        // uuid validation.
+        if (!validator.default.isUUID(id, 4)) {
+            logger.debug("id is invalid");
+            res.send(
+                {
+                    "success": false,
+                    "error": {
+                        "status": 400,
+                        "message": "Invalid uuid."
+                    }
+                }
+            )
+        }
+
         MongoClient.connect(url, function(err, db) {
             if (err) throw err;
-            var dbo = db.db("mydb");
-            var query = { _id: id };
+            const dbo = db.db("mydb");
+            const query = {_id: id};
             dbo.collection("Market").find(query).toArray(async function(err, result) {
                 if (err) {
                     console.log(err);
@@ -1916,15 +2033,15 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/asset/sell', async fu
                 }
                 console.log(result);
                 // db.close();
-                var price = 0;
+                let price = 0;
                 price = result[0].bids[customer];
 
-                var obj = result[0].bids;
-                var firstIterate = true;
-                var biders = "";
-                var bids = "";
-                for (var key in obj) {
-                    if (obj.hasOwnProperty(key) && key != customer) {
+                const obj = result[0].bids;
+                let firstIterate = true;
+                let biders = "";
+                let bids = "";
+                for (let key in obj) {
+                    if (obj.hasOwnProperty(key) && key !== customer) {
                         if(!firstIterate) {
                             biders = biders + "#";
                             bids = bids + "#"
@@ -1936,15 +2053,22 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/asset/sell', async fu
                 }
                 biders = biders + "";
                 bids = bids + "";
-                // console.log("Biders array : " + biders); 
+                // console.log("Biders array : " + biders);
 
                 let message = await invoke.sellAsset(channelName, chaincodeName, req.username, req.orgname, id, req.username, customer, price, biders);
                 console.log(`message result is : ${message}`)
 
-                if(message.status == 200) {
+                if(message.status === 200) {
 
                     const date = Date()
-                    var myobj = { user: req.username, assetId: id, assetType: "Asset", tx: "Sell to " + customer, date: date, details: message.body};
+                    const myobj = {
+                        user: req.username,
+                        assetId: id,
+                        assetType: "Asset",
+                        tx: "Sell to " + customer,
+                        date: date,
+                        details: message.body
+                    };
                     dbo.collection("Logs").insertOne(myobj, function(err, result) {
                         if (err) {
                             console.log(err);
@@ -1952,7 +2076,14 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/asset/sell', async fu
                         console.log("Log successful");
                         // db.close();
                     });
-                    var myobj1 = { user: customer, assetId: id, assetType: "Asset", tx: "Buy from " + req.username, date: date, details: message.body};
+                    const myobj1 = {
+                        user: customer,
+                        assetId: id,
+                        assetType: "Asset",
+                        tx: "Buy from " + req.username,
+                        date: date,
+                        details: message.body
+                    };
                     dbo.collection("Logs").insertOne(myobj1, function(err, result) {
                         if (err) {
                             console.log(err);
@@ -1961,7 +2092,7 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/asset/sell', async fu
                         // db.close();
                     });
 
-                    var myquery = { _id: id };
+                    const myquery = {_id: id};
                     dbo.collection("Market").deleteOne(myquery, function(err, obj) {
                         if (err) {
                             console.log(err);
@@ -2004,7 +2135,7 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName/asset/sell', async fu
 
 app.get('/channels/:channelName/chaincodes/:chaincodeName/asset', async function (req, res) {
 
-    if (req.username == adminUsername) {
+    if (req.username === adminUsername) {
         res.json({ success: false, message: "Permission denied."});
         return;
     }
@@ -2012,12 +2143,12 @@ app.get('/channels/:channelName/chaincodes/:chaincodeName/asset', async function
     try {
         logger.debug('==================== QUERY BY CHAINCODE ==================');
 
-        var channelName = req.params.channelName;
-        var chaincodeName = req.params.chaincodeName;
+        const channelName = req.params.channelName;
+        const chaincodeName = req.params.chaincodeName;
         console.log(`chaincode name is :${chaincodeName}`);
-        var id = req.query.id;
-        console.log(`id is :${id}`);
+        const id = req.query.id;
 
+        console.log(`id is :${id}`);
         logger.debug('channelName : ' + channelName);
         logger.debug('chaincodeName : ' + chaincodeName);
 
@@ -2034,6 +2165,19 @@ app.get('/channels/:channelName/chaincodes/:chaincodeName/asset', async function
             return;
         }
 
+        // uuid validation.
+        if (!validator.default.isUUID(id, 4)) {
+            logger.debug("id is invalid");
+            res.send(
+                {
+                    "success": false,
+                    "error": {
+                        "status": 400,
+                        "message": "Invalid uuid."
+                    }
+                }
+            )
+        }
 
         let message = await query.queryAsset(channelName, chaincodeName, req.username, req.orgname, id);
 
@@ -2056,7 +2200,7 @@ app.get('/channels/:channelName/chaincodes/:chaincodeName/asset', async function
 
 app.get('/channels/:channelName/chaincodes/:chaincodeName/token', async function (req, res) {
 
-    if (req.username == adminUsername) {
+    if (req.username === adminUsername) {
         res.json({ success: false, message: "Permission denied."});
         return;
     }
@@ -2064,10 +2208,10 @@ app.get('/channels/:channelName/chaincodes/:chaincodeName/token', async function
     try {
         logger.debug('==================== QUERY BY CHAINCODE ==================');
 
-        var channelName = req.params.channelName;
-        var chaincodeName = req.params.chaincodeName;
-        console.log(`chaincode name is :${chaincodeName}`);
+        const channelName = req.params.channelName;
+        const chaincodeName = req.params.chaincodeName;
 
+        console.log(`chaincode name is :${chaincodeName}`);
         logger.debug('channelName : ' + channelName);
         logger.debug('chaincodeName : ' + chaincodeName);
 
@@ -2103,8 +2247,8 @@ app.get('/channels/:channelName/chaincodes/:chaincodeName/assets/all', async fun
     try {
         logger.debug('==================== QUERY BY CHAINCODE ==================');
 
-        var channelName = req.params.channelName;
-        var chaincodeName = req.params.chaincodeName;
+        const channelName = req.params.channelName;
+        const chaincodeName = req.params.chaincodeName;
         console.log(`chaincode name is :${chaincodeName}`);
 
         logger.debug('channelName : ' + channelName);
@@ -2148,11 +2292,11 @@ app.get('/channels/:channelName/chaincodes/:chaincodeName/assets/owner', async f
     try {
         logger.debug('==================== QUERY BY CHAINCODE ==================');
 
-        var channelName = req.params.channelName;
-        var chaincodeName = req.params.chaincodeName;
+        const channelName = req.params.channelName;
+        const chaincodeName = req.params.chaincodeName;
         console.log(`chaincode name is :${chaincodeName}`);
 
-        let owner = req.username;
+        const owner = req.username;
 
         logger.debug('channelName : ' + channelName);
         logger.debug('chaincodeName : ' + chaincodeName);
@@ -2187,7 +2331,7 @@ app.get('/channels/:channelName/chaincodes/:chaincodeName/assets/owner', async f
 
 app.get('/channels/:channelName/chaincodes/:chaincodeName/assets/LD', async function (req, res) {
 
-    if (req.username == adminUsername) {
+    if (req.username === adminUsername) {
         res.json({ success: false, message: "Permission denied."});
         return;
     }
@@ -2195,11 +2339,11 @@ app.get('/channels/:channelName/chaincodes/:chaincodeName/assets/LD', async func
     try {
         logger.debug('==================== QUERY BY CHAINCODE ==================');
 
-        var channelName = req.params.channelName;
-        var chaincodeName = req.params.chaincodeName;
+        const channelName = req.params.channelName;
+        const chaincodeName = req.params.chaincodeName;
         console.log(`chaincode name is :${chaincodeName}`);
 
-        let owner = req.username;
+        const owner = req.username;
 
         logger.debug('channelName : ' + channelName);
         logger.debug('chaincodeName : ' + chaincodeName);
@@ -2234,7 +2378,7 @@ app.get('/channels/:channelName/chaincodes/:chaincodeName/assets/LD', async func
 
 app.get('/channels/:channelName/chaincodes/:chaincodeName/assets/GD', async function (req, res) {
 
-    if (req.username == adminUsername) {
+    if (req.username === adminUsername) {
         res.json({ success: false, message: "Permission denied."});
         return;
     }
@@ -2242,8 +2386,8 @@ app.get('/channels/:channelName/chaincodes/:chaincodeName/assets/GD', async func
     try {
         logger.debug('==================== QUERY BY CHAINCODE ==================');
 
-        var channelName = req.params.channelName;
-        var chaincodeName = req.params.chaincodeName;
+        const channelName = req.params.channelName;
+        const chaincodeName = req.params.chaincodeName;
         console.log(`chaincode name is :${chaincodeName}`);
 
         let owner = req.username;
@@ -2281,7 +2425,7 @@ app.get('/channels/:channelName/chaincodes/:chaincodeName/assets/GD', async func
 
 app.get('/channels/:channelName/chaincodes/:chaincodeName/assets/status', async function (req, res) {
 
-    if (req.username == adminUsername) {
+    if (req.username === adminUsername) {
         res.json({ success: false, message: "Permission denied."});
         return;
     }
@@ -2289,11 +2433,11 @@ app.get('/channels/:channelName/chaincodes/:chaincodeName/assets/status', async 
     try {
         logger.debug('==================== QUERY BY CHAINCODE ==================');
 
-        var channelName = req.params.channelName;
-        var chaincodeName = req.params.chaincodeName;
+        const channelName = req.params.channelName;
+        const chaincodeName = req.params.chaincodeName;
         console.log(`chaincode name is :${chaincodeName}`);
 
-        var status = req.query.status;
+        const status = req.query.status;
 
         logger.debug('channelName : ' + channelName);
         logger.debug('chaincodeName : ' + chaincodeName);
@@ -2328,7 +2472,7 @@ app.get('/channels/:channelName/chaincodes/:chaincodeName/assets/status', async 
 
 app.get('/channels/:channelName/chaincodes/:chaincodeName/assets/buyer', async function (req, res) {
 
-    if (req.username == adminUsername) {
+    if (req.username === adminUsername) {
         res.json({ success: false, message: "Permission denied."});
         return;
     }
@@ -2336,11 +2480,11 @@ app.get('/channels/:channelName/chaincodes/:chaincodeName/assets/buyer', async f
     try {
         logger.debug('==================== QUERY BY CHAINCODE ==================');
 
-        var channelName = req.params.channelName;
-        var chaincodeName = req.params.chaincodeName;
+        const channelName = req.params.channelName;
+        const chaincodeName = req.params.chaincodeName;
         console.log(`chaincode name is :${chaincodeName}`);
 
-        var buyer = req.username;
+        const buyer = req.username;
 
         logger.debug('channelName : ' + channelName);
         logger.debug('chaincodeName : ' + chaincodeName);
@@ -2373,14 +2517,12 @@ app.get('/channels/:channelName/chaincodes/:chaincodeName/assets/buyer', async f
     }
 });
 
-//-------------------------------------------------------------------------------
-
 app.get('/channels/:channelName/chaincodes/:chaincodeName/assets/public', async function (req, res) {
     try {
         logger.debug('==================== QUERY BY CHAINCODE ==================');
 
-        var channelName = req.params.channelName;
-        var chaincodeName = req.params.chaincodeName;
+        const channelName = req.params.channelName;
+        const chaincodeName = req.params.chaincodeName;
 
         console.log(`chaincode name is :${chaincodeName}`);
 
@@ -2396,7 +2538,7 @@ app.get('/channels/:channelName/chaincodes/:chaincodeName/assets/public', async 
             return;
         }
 
-        let message = await query.queryPublicChickens(channelName, chaincodeName, req.username, req.orgname);
+        let message = await query.queryPublicAssets(channelName, chaincodeName, req.username, req.orgname);
 
         const response_payload = {
             result: message,
@@ -2417,7 +2559,7 @@ app.get('/channels/:channelName/chaincodes/:chaincodeName/assets/public', async 
 
 app.get('/channels/:channelName/chaincodes/:chaincodeName/batch/assets', async function (req, res) {
 
-    if (req.username == adminUsername) {
+    if (req.username === adminUsername) {
         res.json({ success: false, message: "Permission denied."});
         return;
     }
@@ -2425,11 +2567,11 @@ app.get('/channels/:channelName/chaincodes/:chaincodeName/batch/assets', async f
     try {
         logger.debug('==================== QUERY BY CHAINCODE ==================');
 
-        var channelName = req.params.channelName;
-        var chaincodeName = req.params.chaincodeName;
+        const channelName = req.params.channelName;
+        const chaincodeName = req.params.chaincodeName;
         console.log(`chaincode name is :${chaincodeName}`);
 
-        var batchId = req.query.batchId;
+        const batchId = req.query.batchId;
 
         let owner = req.username;
 
@@ -2450,7 +2592,21 @@ app.get('/channels/:channelName/chaincodes/:chaincodeName/batch/assets', async f
             res.json(getErrorMessage('\'batchId\''));
             return;
         }
-        
+
+        // uuid validation.
+        if (!validator.default.isUUID(batchId, 4)) {
+            logger.debug("id is invalid");
+            res.send(
+                {
+                    "success": false,
+                    "error": {
+                        "status": 400,
+                        "message": "Invalid uuid."
+                    }
+                }
+            )
+        }
+
         let message = await query.getAssetsOfBatch(channelName, chaincodeName, req.username, req.orgname, batchId, owner);
 
         const response_payload = {
@@ -2474,10 +2630,10 @@ app.get('/channels/:channelName/chaincodes/:chaincodeName/asset/history', async 
     try {
         logger.debug('==================== QUERY BY CHAINCODE ==================');
 
-        var channelName = req.params.channelName;
-        var chaincodeName = req.params.chaincodeName;
-        
-        var id = req.query.id;
+        const channelName = req.params.channelName;
+        const chaincodeName = req.params.chaincodeName;
+
+        const id = req.query.id;
 
         console.log(`chaincode name is :${chaincodeName}`);
 
@@ -2495,6 +2651,20 @@ app.get('/channels/:channelName/chaincodes/:chaincodeName/asset/history', async 
         if (!id) {
             res.json(getErrorMessage('\'id\''));
             return;
+        }
+
+        // uuid validation.
+        if (!validator.default.isUUID(id, 4)) {
+            logger.debug("id is invalid");
+            res.send(
+                {
+                    "success": false,
+                    "error": {
+                        "status": 400,
+                        "message": "Invalid uuid."
+                    }
+                }
+            )
         }
 
         let message = await query.getAssetHistory(channelName, chaincodeName, req.username, req.orgname, id);
@@ -2520,8 +2690,8 @@ app.get('/channels/:channelName/chaincodes/:chaincodeName/assets/owner/phone', a
     try {
         logger.debug('==================== QUERY BY CHAINCODE ==================');
 
-        var channelName = req.params.channelName;
-        var chaincodeName = req.params.chaincodeName;
+        const channelName = req.params.channelName;
+        const chaincodeName = req.params.chaincodeName;
         console.log(`chaincode name is :${chaincodeName}`);
 
         let owner = req.query.owner;
@@ -2560,7 +2730,7 @@ app.get('/channels/:channelName/chaincodes/:chaincodeName/assets/owner/phone', a
 
 app.get('/channels/:channelName/chaincodes/:chaincodeName/asset/bids', async function (req, res) {
 
-    if (req.username == adminUsername) {
+    if (req.username === adminUsername) {
         res.json({ success: false, message: "Permission denied."});
         return;
     }
@@ -2568,9 +2738,9 @@ app.get('/channels/:channelName/chaincodes/:chaincodeName/asset/bids', async fun
     try {
         logger.debug('==================== QUERY BY CHAINCODE ==================');
 
-        var channelName = req.params.channelName;
-        var chaincodeName = req.params.chaincodeName;
-        var assetId = req.query.assetId;
+        const channelName = req.params.channelName;
+        const chaincodeName = req.params.chaincodeName;
+        const assetId = req.query.assetId;
         console.log(`chaincode name is :${chaincodeName}`);
 
         logger.debug('channelName : ' + channelName);
@@ -2590,12 +2760,10 @@ app.get('/channels/:channelName/chaincodes/:chaincodeName/asset/bids', async fun
             return;
         }
 
-        // let message = await query.queryBidsOfAsset(channelName, chaincodeName, req.username, req.orgname, assetId, req.username);
-
         MongoClient.connect(url, function(err, db) {
             if (err) throw err;
-            var dbo = db.db("mydb");
-            var query = { _id: assetId };
+            const dbo = db.db("mydb");
+            const query = {_id: assetId};
             dbo.collection("Market").find(query).toArray(function(err, result) {
                 if (err) {
                     console.log(err);
@@ -2603,7 +2771,7 @@ app.get('/channels/:channelName/chaincodes/:chaincodeName/asset/bids', async fun
                 }
                 console.log(result);
                 db.close();
-                if(result[0].asset.owner == req.username) {
+                if(result[0].asset.owner === req.username) {
                     const response_payload = {
                         result: result[0].bids,
                         error: null,
@@ -2630,7 +2798,7 @@ app.get('/channels/:channelName/chaincodes/:chaincodeName/asset/bids', async fun
 
 app.get('/qscc/channels/:channelName/chaincodes/:chaincodeName', async function (req, res) {x
 
-    if (req.username == adminUsername) {
+    if (req.username === adminUsername) {
         res.json({ success: false, message: "Permission denied."});
         return;
     }
@@ -2638,8 +2806,8 @@ app.get('/qscc/channels/:channelName/chaincodes/:chaincodeName', async function 
     try {
         logger.debug('==================== QUERY BY CHAINCODE ==================');
 
-        var channelName = req.params.channelName;
-        var chaincodeName = req.params.chaincodeName;
+        const channelName = req.params.channelName;
+        const chaincodeName = req.params.chaincodeName;
         console.log(`chaincode name is :${chaincodeName}`)
         let args = req.query.args;
         let fcn = req.query.fcn;
@@ -2692,17 +2860,17 @@ app.get('/qscc/channels/:channelName/chaincodes/:chaincodeName', async function 
 
 app.get('/collection/:collectionName/user/history', async function(req, res){
 
-    var collectionName = req.params.collectionName;
-    
-    if (req.username == adminUsername) {
+    const collectionName = req.params.collectionName;
+
+    if (req.username === adminUsername) {
         res.json({ success: false, message: "Permission denied."});
         return;
     }
 
     MongoClient.connect(url, function(err, db) {
         if (err) throw err;
-        var dbo = db.db("mydb");
-        var query = { user: req.username };
+        const dbo = db.db("mydb");
+        const query = {user: req.username};
         dbo.collection(collectionName).find(query).toArray(function(err, result) {
             if (err) {
                 console.log(err);
@@ -2725,8 +2893,8 @@ app.get('/collection/:collectionName/user/history', async function(req, res){
 
 app.get('/batchSize', async function(req, res){
 
-    var username = req.username;
-    
+    const username = req.username;
+
     databaseCon.connect(
         function(err){
             if (err) {
@@ -2740,7 +2908,7 @@ app.get('/batchSize', async function(req, res){
                 return;
             }
             console.log("Connected to database.");
-            var sql = "SELECT * FROM organizations WHERE `username` = '"+username+"'";
+            const sql = "SELECT * FROM organizations WHERE `username` = '" + username + "'";
             databaseCon.query(sql, async function (err, result) {
 
                 if (err) {

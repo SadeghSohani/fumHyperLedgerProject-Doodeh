@@ -3,11 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	"math/rand"
 	"strconv"
 	"strings"
 	"time"
-	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-	"math/rand"
 )
 
 type SmartContract struct {
@@ -21,28 +21,28 @@ type Attribute struct {
 }
 
 type Asset struct {
-	Id            string            `json:"id"`
-	SerialNumber  string            `json:"SerialNumber"`
-	Type          string            `json:"type"`
-	Tag           string            `json:"tag"`
-	Status        string            `json:"status"`
-	Price         float64           `json:"price"`
-	Parent        string            `json:"parent"`
-	Owner         string            `json:"owner"`
-	Attrs         []Attribute       `json:"attrs"`
-	ForSale       bool              `json:"forSale"`
-	TxType        string            `json:"txType"`
-	ChildesCount  int               `json:"childesCount"`
-	Buyer         string            `json:"buyer"`
-	LocalDC       string            `json:"localDC"`
-	GlobalDC      string            `json:"globalDC"`
+	Id           string      `json:"id"`
+	SerialNumber string      `json:"SerialNumber"`
+	Type         string      `json:"type"`
+	Tag          string      `json:"tag"`
+	Status       string      `json:"status"`
+	Price        float64     `json:"price"`
+	Parent       string      `json:"parent"`
+	Owner        string      `json:"owner"`
+	Attrs        []Attribute `json:"attrs"`
+	ForSale      bool        `json:"forSale"`
+	TxType       string      `json:"txType"`
+	ChildesCount int         `json:"childesCount"`
+	Buyer        string      `json:"buyer"`
+	LocalDC      string      `json:"localDC"`
+	GlobalDC     string      `json:"globalDC"`
 }
 
 type HistoryModel struct {
-	TxId      string   `json:"txId"`
+	TxId      string `json:"txId"`
 	Asset     *Asset `json:"asset"`
-	Timestamp string   `json:"timestamp"`
-	IsDelete  bool     `json:"isDelete"`
+	Timestamp string `json:"timestamp"`
+	IsDelete  bool   `json:"isDelete"`
 }
 
 type Token struct {
@@ -60,10 +60,9 @@ func (s *SmartContract) CreateAsset(ctx contractapi.TransactionContextInterface,
 	id string, assetType string, tag string,
 	status string, price float64, owner string) (*Asset, error) {
 
-
 	attrs := []Attribute{}
-	
-	asset := Asset{Id: id, SerialNumber: "BC"+strconv.Itoa(rand.Intn(99999999-10000000) + 10000000), Type: assetType, Tag: tag, Status: status, Price: price, Parent: owner, Owner: owner, Attrs: attrs, ForSale: false, TxType: "CreateAsset", ChildesCount: 0, Buyer: "", LocalDC: "", GlobalDC: ""}
+
+	asset := Asset{Id: id, SerialNumber: "BC" + strconv.Itoa(rand.Intn(99999999-10000000)+10000000), Type: assetType, Tag: tag, Status: status, Price: price, Parent: owner, Owner: owner, Attrs: attrs, ForSale: false, TxType: "CreateAsset", ChildesCount: 0, Buyer: "", LocalDC: "", GlobalDC: ""}
 
 	assetAsBytes, _ := json.Marshal(asset)
 	err := ctx.GetStub().PutState(id, assetAsBytes)
@@ -75,21 +74,21 @@ func (s *SmartContract) CreateAsset(ctx contractapi.TransactionContextInterface,
 	return &asset, nil
 }
 
-func (s *SmartContract) CreateBulkAssets(ctx contractapi.TransactionContextInterface, 
+func (s *SmartContract) CreateBulkAssets(ctx contractapi.TransactionContextInterface,
 	assetsIds string, assetType string, tag string,
 	status string, price float64, owner string) ([]Asset, error) {
 
 	ids := strings.Split(assetsIds, "#")
 
 	attrs := []Attribute{}
-	
+
 	result := []Asset{}
 
 	for i := range ids {
-		asset := Asset{Id: ids[i], SerialNumber: "CH"+strconv.Itoa(rand.Intn(99999999-10000000) + 10000000), Type: assetType, Tag: tag, Status: status, Price: price, Parent: owner, Owner: owner, Attrs: attrs, ForSale: false, TxType: "CreateAsset", ChildesCount: 0, Buyer: "", LocalDC: "", GlobalDC: "" }
+		asset := Asset{Id: ids[i], SerialNumber: "CH" + strconv.Itoa(rand.Intn(99999999-10000000)+10000000), Type: assetType, Tag: tag, Status: status, Price: price, Parent: owner, Owner: owner, Attrs: attrs, ForSale: false, TxType: "CreateAsset", ChildesCount: 0, Buyer: "", LocalDC: "", GlobalDC: ""}
 		assetAsBytes, _ := json.Marshal(asset)
 		err := ctx.GetStub().PutState(ids[i], assetAsBytes)
-	
+
 		if err != nil {
 			return nil, fmt.Errorf("Failed to put to world state. %s", err.Error())
 		}
@@ -102,13 +101,13 @@ func (s *SmartContract) CreateBulkAssets(ctx contractapi.TransactionContextInter
 }
 
 func (s *SmartContract) CreateBulkAssetsInBatch(ctx contractapi.TransactionContextInterface,
-	 assetsIds string, assetType string, tag string,
-	 status string, price float64, owner string, batchId string) (*Asset, error) {
+	assetsIds string, assetType string, tag string,
+	status string, price float64, owner string, batchId string) (*Asset, error) {
 
 	ids := strings.Split(assetsIds, "#")
 
 	attrs := []Attribute{}
-	batch := Asset{Id: batchId, SerialNumber: "BC"+strconv.Itoa(rand.Intn(99999999-10000000) + 10000000), Type: "Batch", Tag: tag, Status: "", Price: 0.0, Parent: owner, Owner: owner, Attrs: attrs, ForSale: false, TxType: "CreateBatch", ChildesCount: len(ids), Buyer: "", LocalDC: "", GlobalDC: ""}
+	batch := Asset{Id: batchId, SerialNumber: "BC" + strconv.Itoa(rand.Intn(99999999-10000000)+10000000), Type: "Batch", Tag: tag, Status: "", Price: 0.0, Parent: owner, Owner: owner, Attrs: attrs, ForSale: false, TxType: "CreateBatch", ChildesCount: len(ids), Buyer: "", LocalDC: "", GlobalDC: ""}
 
 	batchAsBytes, _ := json.Marshal(batch)
 	err := ctx.GetStub().PutState(batchId, batchAsBytes)
@@ -118,10 +117,10 @@ func (s *SmartContract) CreateBulkAssetsInBatch(ctx contractapi.TransactionConte
 	}
 
 	for i := range ids {
-		asset := Asset{Id: ids[i], SerialNumber: "CH"+strconv.Itoa(rand.Intn(99999999-10000000) + 10000000), Type: assetType, Tag: tag, Status: status, Price: price, Parent: batchId, Owner: owner, Attrs: attrs, ForSale: false, TxType: "CreateAsset", ChildesCount: 0, Buyer: "", LocalDC: "", GlobalDC: ""}
+		asset := Asset{Id: ids[i], SerialNumber: "CH" + strconv.Itoa(rand.Intn(99999999-10000000)+10000000), Type: assetType, Tag: tag, Status: status, Price: price, Parent: batchId, Owner: owner, Attrs: attrs, ForSale: false, TxType: "CreateAsset", ChildesCount: 0, Buyer: "", LocalDC: "", GlobalDC: ""}
 		assetAsBytes, _ := json.Marshal(asset)
 		err := ctx.GetStub().PutState(ids[i], assetAsBytes)
-	
+
 		if err != nil {
 			return nil, fmt.Errorf("Failed to put to world state. %s", err.Error())
 		}
@@ -277,7 +276,6 @@ func (s *SmartContract) QueryAllAssets(ctx contractapi.TransactionContextInterfa
 		asset := new(Asset)
 		_ = json.Unmarshal(queryResponse.Value, asset)
 
-
 		results = append(results, *asset)
 
 	}
@@ -309,7 +307,7 @@ func (s *SmartContract) QueryAssetsByLD(ctx contractapi.TransactionContextInterf
 		asset := new(Asset)
 		_ = json.Unmarshal(queryResponse.Value, asset)
 
-		if asset.LocalDC == owner && (asset.Parent == asset.Owner) {
+		if asset.LocalDC == owner && (asset.Parent == asset.Owner) && asset.Status == "ReadyToGlobalDelivery" {
 			results = append(results, *asset)
 		}
 
@@ -350,7 +348,6 @@ func (s *SmartContract) QueryAssetsByGD(ctx contractapi.TransactionContextInterf
 
 	return results, nil
 }
-
 
 func (s *SmartContract) QueryAssetsByOwner(ctx contractapi.TransactionContextInterface, owner string) ([]Asset, error) {
 
@@ -469,32 +466,32 @@ func (s *SmartContract) GetAssetsOfBatch(ctx contractapi.TransactionContextInter
 	if batch.Owner == owner {
 		startKey := ""
 		endKey := ""
-	
+
 		resultsIterator, err := ctx.GetStub().GetStateByRange(startKey, endKey)
-	
+
 		if err != nil {
 			return nil, err
 		}
 		defer resultsIterator.Close()
-	
+
 		results := []Asset{}
-	
+
 		for resultsIterator.HasNext() {
 			queryResponse, err := resultsIterator.Next()
-	
+
 			if err != nil {
 				return nil, err
 			}
-	
+
 			asset := new(Asset)
 			_ = json.Unmarshal(queryResponse.Value, asset)
-	
+
 			if asset.Parent == batchId {
 				results = append(results, *asset)
 			}
-	
+
 		}
-		return results, nil		
+		return results, nil
 	} else {
 		return nil, fmt.Errorf("Permission denied.")
 	}
@@ -567,7 +564,7 @@ func (t *SmartContract) GetAssetHistory(ctx contractapi.TransactionContextInterf
 
 }
 
-func (s *SmartContract) PutAttribute(ctx contractapi.TransactionContextInterface, 
+func (s *SmartContract) PutAttribute(ctx contractapi.TransactionContextInterface,
 	id string, key string, value string, instruction string, owner string) (*Asset, error) {
 	asset, err := s.QueryAsset(ctx, id)
 
@@ -590,12 +587,11 @@ func (s *SmartContract) PutAttribute(ctx contractapi.TransactionContextInterface
 		return nil, fmt.Errorf("Failed to put to world state. %s", err.Error())
 	}
 
-	
 	return asset, nil
 
 }
 
-func (s *SmartContract) PutAttributeForAssetsInBatch(ctx contractapi.TransactionContextInterface, 
+func (s *SmartContract) PutAttributeForAssetsInBatch(ctx contractapi.TransactionContextInterface,
 	batchId string, key string, value string, instruction string, owner string) ([]Asset, error) {
 
 	assets, err := s.GetAssetsOfBatch(ctx, batchId, owner)
@@ -620,12 +616,12 @@ func (s *SmartContract) PutAttributeForAssetsInBatch(ctx contractapi.Transaction
 		}
 		result = append(result, asset)
 	}
-	
+
 	return result, nil
 
 }
 
-func (s *SmartContract) ChangeStatusForAssetsInBatch(ctx contractapi.TransactionContextInterface, 
+func (s *SmartContract) ChangeStatusForAssetsInBatch(ctx contractapi.TransactionContextInterface,
 	batchId string, owner string, status string) ([]Asset, error) {
 
 	assets, err := s.GetAssetsOfBatch(ctx, batchId, owner)
@@ -647,12 +643,12 @@ func (s *SmartContract) ChangeStatusForAssetsInBatch(ctx contractapi.Transaction
 		}
 		result = append(result, asset)
 	}
-	
+
 	return result, nil
 
 }
 
-func (s *SmartContract) ChangeOwnerForAssetsInBatch(ctx contractapi.TransactionContextInterface, 
+func (s *SmartContract) ChangeOwnerForAssetsInBatch(ctx contractapi.TransactionContextInterface,
 	batchId string, owner string, newOwner string, txType string) ([]Asset, error) {
 
 	assets, err := s.GetAssetsOfBatch(ctx, batchId, owner)
@@ -674,12 +670,12 @@ func (s *SmartContract) ChangeOwnerForAssetsInBatch(ctx contractapi.TransactionC
 		}
 		result = append(result, asset)
 	}
-	
+
 	return result, nil
 
 }
 
-func (s *SmartContract) TakeDeliveryForAssetsInBatch(ctx contractapi.TransactionContextInterface, 
+func (s *SmartContract) TakeDeliveryForAssetsInBatch(ctx contractapi.TransactionContextInterface,
 	batchId string, owner string, buyer string) ([]Asset, error) {
 
 	assets, err := s.GetAssetsOfBatch(ctx, batchId, owner)
@@ -704,12 +700,12 @@ func (s *SmartContract) TakeDeliveryForAssetsInBatch(ctx contractapi.Transaction
 		}
 		result = append(result, asset)
 	}
-	
+
 	return result, nil
 
 }
 
-func (s *SmartContract) AddBuyerForAssetsInBatch(ctx contractapi.TransactionContextInterface, 
+func (s *SmartContract) AddBuyerForAssetsInBatch(ctx contractapi.TransactionContextInterface,
 	batchId string, owner string, buyer string, price float64) ([]Asset, error) {
 
 	assets, err := s.GetAssetsOfBatch(ctx, batchId, owner)
@@ -733,12 +729,12 @@ func (s *SmartContract) AddBuyerForAssetsInBatch(ctx contractapi.TransactionCont
 		}
 		result = append(result, asset)
 	}
-	
+
 	return result, nil
 
 }
 
-func (s *SmartContract) AddLocalDCForAssetsInBatch(ctx contractapi.TransactionContextInterface, 
+func (s *SmartContract) AddLocalDCForAssetsInBatch(ctx contractapi.TransactionContextInterface,
 	batchId string, localDC string) ([]Asset, error) {
 
 	startKey := ""
@@ -776,12 +772,12 @@ func (s *SmartContract) AddLocalDCForAssetsInBatch(ctx contractapi.TransactionCo
 		}
 		result = append(result, asset)
 	}
-	
+
 	return result, nil
 
 }
 
-func (s *SmartContract) AddGlobalDCForAssetsInBatch(ctx contractapi.TransactionContextInterface, 
+func (s *SmartContract) AddGlobalDCForAssetsInBatch(ctx contractapi.TransactionContextInterface,
 	batchId string, globalDC string) ([]Asset, error) {
 
 	startKey := ""
@@ -821,12 +817,12 @@ func (s *SmartContract) AddGlobalDCForAssetsInBatch(ctx contractapi.TransactionC
 		}
 		result = append(result, asset)
 	}
-	
+
 	return result, nil
 
 }
 
-func (s *SmartContract) ChangeAssetOwner(ctx contractapi.TransactionContextInterface, 
+func (s *SmartContract) ChangeAssetOwner(ctx contractapi.TransactionContextInterface,
 	id string, owner string, newOwner string) (*Asset, error) {
 	asset, err := s.QueryAsset(ctx, id)
 
@@ -856,19 +852,17 @@ func (s *SmartContract) ChangeAssetOwner(ctx contractapi.TransactionContextInter
 		return nil, fmt.Errorf("Failed to put to world state. %s", err.Error())
 	}
 
-	
 	return asset, nil
 
 }
 
-func (s *SmartContract) TakeDelivery(ctx contractapi.TransactionContextInterface, 
+func (s *SmartContract) TakeDelivery(ctx contractapi.TransactionContextInterface,
 	id string, buyer string) (*Asset, error) {
 	asset, err := s.QueryAsset(ctx, id)
 
 	if err != nil {
 		return nil, err
 	}
-
 
 	if asset.Buyer == buyer {
 
@@ -877,7 +871,7 @@ func (s *SmartContract) TakeDelivery(ctx contractapi.TransactionContextInterface
 		if err != nil {
 			return nil, err
 		}
-	
+
 		customer_token.BlockAmount = customer_token.BlockAmount - 10
 		customer_token.Amount = customer_token.Amount + 10
 		cTokenAsBytes, _ := json.Marshal(customer_token)
@@ -909,14 +903,11 @@ func (s *SmartContract) TakeDelivery(ctx contractapi.TransactionContextInterface
 		return nil, fmt.Errorf("Failed to put to world state. %s", err.Error())
 	}
 
-	
-
-	
 	return asset, nil
 
 }
 
-func (s *SmartContract) AddLocalDeliveryCompany(ctx contractapi.TransactionContextInterface, 
+func (s *SmartContract) AddLocalDeliveryCompany(ctx contractapi.TransactionContextInterface,
 	id string, localDC string) (*Asset, error) {
 	asset, err := s.QueryAsset(ctx, id)
 
@@ -943,12 +934,11 @@ func (s *SmartContract) AddLocalDeliveryCompany(ctx contractapi.TransactionConte
 		}
 	}
 
-	
 	return asset, nil
 
 }
 
-func (s *SmartContract) AddGlobalDeliveryCompany(ctx contractapi.TransactionContextInterface, 
+func (s *SmartContract) AddGlobalDeliveryCompany(ctx contractapi.TransactionContextInterface,
 	id string, globalDC string) (*Asset, error) {
 	asset, err := s.QueryAsset(ctx, id)
 
@@ -975,38 +965,11 @@ func (s *SmartContract) AddGlobalDeliveryCompany(ctx contractapi.TransactionCont
 		}
 	}
 
-	
 	return asset, nil
 
 }
 
-// func (s *SmartContract) ChangeAssetOwnerPhone(ctx contractapi.TransactionContextInterface, 
-// 	id string, owner string, newOwner string) (*Asset, error) {
-// 	asset, err := s.QueryAsset(ctx, id)
-
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	if asset.Status == "FinalProduct" {
-// 		asset.Owner = newOwner
-// 		asset.Parent = newOwner
-// 		asset.TxType = "ChangeOwner"
-// 	}
-
-// 	assetAsBytes, _ := json.Marshal(asset)
-
-// 	_err := ctx.GetStub().PutState(id, assetAsBytes)
-
-// 	if _err != nil {
-// 		return nil, fmt.Errorf("Failed to put to world state. %s", err.Error())
-// 	}
-
-// 	return asset, nil
-
-// }
-
-func (s *SmartContract) ChangeAssetStatus(ctx contractapi.TransactionContextInterface, 
+func (s *SmartContract) ChangeAssetStatus(ctx contractapi.TransactionContextInterface,
 	id string, owner string, status string) (*Asset, error) {
 	asset, err := s.QueryAsset(ctx, id)
 
@@ -1029,37 +992,7 @@ func (s *SmartContract) ChangeAssetStatus(ctx contractapi.TransactionContextInte
 
 }
 
-// func (s *SmartContract) SendToShop(ctx contractapi.TransactionContextInterface, 
-// 	id string, owner string, price float64) (*Asset, error) {
-// 	asset, err := s.QueryAsset(ctx, id)
-
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	if asset.Type == "Batch" {
-// 		return nil, fmt.Errorf("Permission denied. %s", err.Error())
-// 	}
-
-// 	if asset.Owner == owner{
-// 		asset.Status = "FinalProduct"
-// 		asset.TxType = "SendToShop"
-// 		asset.Price = price
-// 	}
-
-// 	assetAsBytes, _ := json.Marshal(asset)
-
-// 	_err := ctx.GetStub().PutState(id, assetAsBytes)
-
-// 	if _err != nil {
-// 		return nil, fmt.Errorf("Failed to put to world state. %s", err.Error())
-// 	}
-
-// 	return asset, nil
-
-// }
-
-func (s *SmartContract) SetAssetPrice(ctx contractapi.TransactionContextInterface, 
+func (s *SmartContract) SetAssetPrice(ctx contractapi.TransactionContextInterface,
 	id string, price float64, owner string) (*Asset, error) {
 	asset, err := s.QueryAsset(ctx, id)
 
@@ -1085,7 +1018,7 @@ func (s *SmartContract) SetAssetPrice(ctx contractapi.TransactionContextInterfac
 
 }
 
-func (s *SmartContract) SetAssetPublicToSell(ctx contractapi.TransactionContextInterface, 
+func (s *SmartContract) SetAssetPublicToSell(ctx contractapi.TransactionContextInterface,
 	id string, owner string, price float64, userType string) (*Asset, error) {
 	asset, err := s.QueryAsset(ctx, id)
 
@@ -1115,7 +1048,7 @@ func (s *SmartContract) SetAssetPublicToSell(ctx contractapi.TransactionContextI
 
 }
 
-func (s *SmartContract) BlockingToken(ctx contractapi.TransactionContextInterface, 
+func (s *SmartContract) BlockingToken(ctx contractapi.TransactionContextInterface,
 	customer string) (*Token, error) {
 	token, err := s.QueryToken(ctx, customer)
 
@@ -1139,7 +1072,7 @@ func (s *SmartContract) BlockingToken(ctx contractapi.TransactionContextInterfac
 
 }
 
-func (s *SmartContract) SellAsset(ctx contractapi.TransactionContextInterface, 
+func (s *SmartContract) SellAsset(ctx contractapi.TransactionContextInterface,
 	id string, owner string, customer string, price float64, biders string) (*Asset, error) {
 
 	asset, err := s.QueryAsset(ctx, id)
@@ -1149,7 +1082,7 @@ func (s *SmartContract) SellAsset(ctx contractapi.TransactionContextInterface,
 	}
 
 	if asset.Owner == owner && asset.Parent == owner {
-		
+
 		asset.Buyer = customer
 		asset.TxType = "SellAsset"
 		asset.ForSale = false
@@ -1161,7 +1094,6 @@ func (s *SmartContract) SellAsset(ctx contractapi.TransactionContextInterface,
 			return nil, fmt.Errorf("Failed to put to world state. %s", err.Error())
 		}
 
-
 		if asset.Type == "Batch" {
 			_, __err := s.AddBuyerForAssetsInBatch(ctx, id, owner, customer, price)
 			if __err != nil {
@@ -1171,9 +1103,9 @@ func (s *SmartContract) SellAsset(ctx contractapi.TransactionContextInterface,
 
 		if biders != "" {
 			bidersArr := strings.Split(biders, "#")
-	
+
 			for i := 0; i < len(bidersArr); i++ {
-		
+
 				token, err := s.QueryToken(ctx, bidersArr[i])
 				token.BlockAmount = token.BlockAmount - 10
 				token.Amount = token.Amount + 10
@@ -1182,10 +1114,10 @@ func (s *SmartContract) SellAsset(ctx contractapi.TransactionContextInterface,
 				if _err != nil {
 					return nil, fmt.Errorf("Failed to put to world state. %s", err.Error())
 				}
-	
+
 			}
 		}
-		                                                                                 
+
 		return asset, nil
 
 	} else {
@@ -1194,7 +1126,7 @@ func (s *SmartContract) SellAsset(ctx contractapi.TransactionContextInterface,
 
 }
 
-func (s *SmartContract) PutAssetsInBatch(ctx contractapi.TransactionContextInterface, 
+func (s *SmartContract) PutAssetsInBatch(ctx contractapi.TransactionContextInterface,
 	assetsIds string, owner string, batchId string) (*Asset, error) {
 
 	batch, err := s.QueryAsset(ctx, batchId)
@@ -1233,7 +1165,7 @@ func (s *SmartContract) PutAssetsInBatch(ctx contractapi.TransactionContextInter
 
 		// _batch := new(Batch)
 		// _ = json.Unmarshal(batchAsBytes, _batch)
-		return batch, nil		
+		return batch, nil
 
 	} else {
 		return nil, fmt.Errorf("You are not owner of this asset. %s", err.Error())
@@ -1241,7 +1173,7 @@ func (s *SmartContract) PutAssetsInBatch(ctx contractapi.TransactionContextInter
 
 }
 
-func (s *SmartContract) RemoveAssetsFromBatch(ctx contractapi.TransactionContextInterface, 
+func (s *SmartContract) RemoveAssetsFromBatch(ctx contractapi.TransactionContextInterface,
 	assetsIds string, owner string, batchId string) (*Asset, error) {
 
 	batch, err := s.QueryAsset(ctx, batchId)
@@ -1280,7 +1212,7 @@ func (s *SmartContract) RemoveAssetsFromBatch(ctx contractapi.TransactionContext
 
 		// _batch := new(Batch)
 		// _ = json.Unmarshal(batchAsBytes, _batch)
-		return batch, nil		
+		return batch, nil
 
 	} else {
 		return nil, fmt.Errorf("You are not owner of this asset. %s", err.Error())
